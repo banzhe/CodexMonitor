@@ -562,6 +562,10 @@ where
 
     let parent_path = PathBuf::from(&parent.path);
     let entry_path = PathBuf::from(&entry.path);
+
+    // On Windows, release Codex's file handles for this worktree before running `git worktree remove`.
+    kill_session_by_id(sessions, &entry.id).await;
+
     if entry_path.exists() {
         if let Err(error) = run_git_command(
             &parent_path,
@@ -579,8 +583,6 @@ where
         }
     }
     let _ = run_git_command(&parent_path, &["worktree", "prune", "--expire", "now"]).await;
-
-    kill_session_by_id(sessions, &entry.id).await;
 
     {
         let mut workspaces = workspaces.lock().await;
